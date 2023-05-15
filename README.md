@@ -40,6 +40,8 @@ Everything was coded using Python 3.9. To interact with the airflow webservice t
 Although the implementation might be a bit simple, the main advantage of this design is that its **highly scalable** and components can be changed or further-developed easily respecting CI/CD principles.
 The skeleton is provided, basically. If, for example, we want to start using S3 instead of text files in a directory, then its just a matter of developing the wrapper and and changing a couple of lines in the relevant task.
 
+The code for each of the tasks in the pipelines are divided into tasks and are found inside of `pipeline/dags`
+
 The design centers around 3 main [DAGs](https://airflow.apache.org/docs/apache-airflow/stable/howto/index.html): 
 - **feature_creation**: responsible for loading a specific sensor's timeseries and transforming it into features by using the feature transformation model. Several instances of this DAG will be ran, one per sensor.
 This DAG is also responsible for getting the latest version of the feature creation model from a model repository.
