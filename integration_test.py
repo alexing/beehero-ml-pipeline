@@ -16,7 +16,7 @@ def activate_dags() -> None:
     dags = airflow.get_dags()
     for a_dag_id in [dag['dag_id'] for dag in dags['dags'] if dag['is_paused']]:
         print(f'unpausing {a_dag_id}')
-        print(airflow.unpause_dags(a_dag_id))
+        airflow.unpause_dags(a_dag_id)
 
 
 def launch_feature_creation_dags() -> Dict[str, bool]:
@@ -52,12 +52,13 @@ def wait_for_feature_creation_dags_completion(feature_creation_dags_done: Dict[s
             raise Exception('something is wrong')
 
 
-def launch_clustering_dag() -> None:
+def launch_clustering_dag() -> str:
     # trigger clustering
     dag_run_id = f"clustering_{now}"
     print(f'triggering {dag_run_id}')
     airflow.trigger_dag_run(CLUSTERING_INFERENCE_DAG_ID, dag_run_id,
                             conf={"features_dir": "tests/sensor_features/"})
+    return dag_run_id
 
 
 def launch_retrain_dag() -> None:
@@ -66,12 +67,29 @@ def launch_retrain_dag() -> None:
     airflow.trigger_dag_run(RETRAIN_MODEL_DAG_ID, dag_run_id)
 
 
+def wait_for_clustering_dag_completion(dag_run_id: str) -> None:
+    timeout = 20  # 20 seconds
+    iterations = 0
+    clustering_done = False
+    while not clustering_done:
+
+        dag_run = airflow.get_dag_run(CLUSTERING_INFERENCE_DAG_ID, dag_run_id)
+        if dag_run['state'] == 'success':
+            print(f"{dag_run_id} succeeded!")
+            clustering_done = True
+        sleep(1)
+        iterations += 1
+        if iterations >= timeout:
+            raise Exception('something is wrong')
+
+
 def main():
     activate_dags()
     feature_creation_dags = launch_feature_creation_dags()
     wait_for_feature_creation_dags_completion(feature_creation_dags)
-    launch_clustering_dag()
+    clustering_dag_run_id = launch_clustering_dag()
 
+    wait_for_clustering_dag_completion(clustering_dag_run_id)
     launch_retrain_dag()
 
 
