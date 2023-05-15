@@ -89,6 +89,7 @@ def main():
     wait_for_feature_creation_dags_completion(feature_creation_dags)
     clustering_dag_run_id = launch_clustering_dag()
 
+    # we will retrain as soon as the clustering is done. This could be improved in the future
     wait_for_clustering_dag_completion(clustering_dag_run_id)
     launch_retrain_dag()
 
