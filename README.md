@@ -14,7 +14,7 @@ a. How to run the entire flow
 - This will make docker take care of all the necessary instalations to run airflow locally and simulate our pipeline
 - Once it's done, I recommend running the following just to make sure airflow loads our DAGs:
 ```bash
-    docker exec -it --user airflow airflow-scheduler bash -c "airflow dags list"
+    docker exec -it --user airflow pipeline-scheduler bash -c "airflow dags list"
 ```
 - You can access the airflow UI through `http://localhost:8080` to see al flows running.
 - To simulate a simple pipeline you should run the file `integration_test.py`
