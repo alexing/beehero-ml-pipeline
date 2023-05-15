@@ -9,4 +9,5 @@ RUN apt-get update && \
 USER airflow
 ENV PYTHONPATH "${PYTHONPATH}:${AIRFLOW_HOME}"
 COPY requirements.txt /tmp/requirements.txt
+COPY ./airflow.cfg ./airflow.cfg
 RUN pip install -r /tmp/requirements.txt

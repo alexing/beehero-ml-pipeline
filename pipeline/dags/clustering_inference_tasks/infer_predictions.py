@@ -24,8 +24,8 @@ def get_latest_clustering_model() -> SensorCluster:
 
 
 def store_features(predictions: pd.DataFrame) -> str:
-    today = datetime.today().strftime('%Y-%m-%d')
-    path = f"{output_dir}/{today}.csv"
+    now = datetime.today().strftime('%Y-%m-%dT%H:%M:%S')
+    path = f"{output_dir}/{now}.csv"
     predictions.to_csv(path, index=False)
     return path
 
