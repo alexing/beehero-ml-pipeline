@@ -47,9 +47,8 @@ This DAG is also responsible for getting the latest version of the feature creat
 <br />In the tests, the DAG is simply triggered manually: it doesn't wait for the crontab manager.
 <br />There are 2 tasks in this DAG:
   - input_validation: empty currently. This would be the place were we validate or clean the data.
-  - create_features: this task is responsible for getting the last feature creation model, transforming the data and storing the features in a bucket.
-<br />
-<br />
+  - create_features: this task is responsible for getting the last feature creation model, transforming the data and storing the features in a bucket.<br />
+
 - **clustering_inference**: responsible for aggregating all the features in the bucket and then outputting the cluster labels and the relevant metrics.
 <br /> Only one instance of this DAG will be run. This would happen __daily at 21:00hs__ by crontab. Uses the bucket path for features as a parameter.
 Currently the bucket is represented as a directory and in the test the DAG is triggered manually (it doesn't wait for the crontab manager).
