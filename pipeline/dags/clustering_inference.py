@@ -13,8 +13,7 @@ from dags.feature_creation_tasks.input_validation import task_input_validation
 with DAG(
     dag_id='clustering_inference',
         start_date=days_ago(1),
-        schedule_interval="0 00 * * *",  # TODO: - check this
-        #params={"path": "first_param"}  # TODO: check this
+        schedule_interval="0 21 * * *",  # daily @ 21:00hs
 ) as dag:
 
     input_validation = PythonOperator(

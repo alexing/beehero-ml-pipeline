@@ -6,7 +6,6 @@ import pandas as pd
 
 # magic to make the pandas inside the dill work
 import __main__
-
 __main__.pd = pd
 
 output_dir = 'tests/sensor_features/'

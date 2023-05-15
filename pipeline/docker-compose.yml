@@ -68,6 +68,6 @@ services:
     command:
       - -c
       - |
-        mkdir -p /sources/logs /sources/dags /sources/plugins /sources/models
-        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins,models}
+        mkdir -p /sources/logs /sources/dags /sources/plugins /sources/models /sources/tests
+        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins,models,tests}
         exec /entrypoint airflow version

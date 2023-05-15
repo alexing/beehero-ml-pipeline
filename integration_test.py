@@ -12,7 +12,7 @@ CLUSTERING_INFERENCE_DAG_ID = 'clustering_inference'
 RETRAIN_MODEL_DAG_ID = 'retrain_model'
 
 
-def activate_dags():
+def activate_dags() -> None:
     dags = airflow.get_dags()
     for a_dag_id in [dag['dag_id'] for dag in dags['dags'] if dag['is_paused']]:
         print(f'unpausing {a_dag_id}')
@@ -37,7 +37,7 @@ def launch_feature_creation_dags() -> Dict[str, bool]:
     return feature_creation_dag_runs_done
 
 
-def wait_for_feature_creation_dags_completion(feature_creation_dags_done: Dict[str, bool]):
+def wait_for_feature_creation_dags_completion(feature_creation_dags_done: Dict[str, bool]) -> None:
     timeout = 20  # 20 seconds
     iterations = 0
     while not all(feature_creation_dags_done.values()):
@@ -52,15 +52,15 @@ def wait_for_feature_creation_dags_completion(feature_creation_dags_done: Dict[s
             raise Exception('something is wrong')
 
 
-def launch_clustering_dag():
+def launch_clustering_dag() -> None:
     # trigger clustering
     dag_run_id = f"clustering_{now}"
     print(f'triggering {dag_run_id}')
     airflow.trigger_dag_run(CLUSTERING_INFERENCE_DAG_ID, dag_run_id,
-                                      conf={"features_dir": "tests/sensor_features/"})
+                            conf={"features_dir": "tests/sensor_features/"})
 
 
-def launch_train_dag():
+def launch_retrain_dag() -> None:
     dag_run_id = f"training_{now}"
     print(f'triggering {dag_run_id}')
     airflow.trigger_dag_run(RETRAIN_MODEL_DAG_ID, dag_run_id)
@@ -72,8 +72,7 @@ def main():
     wait_for_feature_creation_dags_completion(feature_creation_dags)
     launch_clustering_dag()
 
-    # TODO: decide when launching a retrain
-    launch_train_dag()
+    launch_retrain_dag()
 
 
 if __name__ == "__main__":

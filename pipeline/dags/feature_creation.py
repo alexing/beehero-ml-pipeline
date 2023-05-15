@@ -22,8 +22,7 @@ with DAG(
     start_date=days_ago(1),
     schedule_interval="0 16 * * *",  # daily @ 16:00hs
     default_args=default_args,
-    max_active_runs=120,
-    max_active_tasks=120
+    max_active_runs=120
 ) as dag:
 
     input_validation = PythonOperator(

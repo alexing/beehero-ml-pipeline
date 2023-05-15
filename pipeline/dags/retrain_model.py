@@ -12,8 +12,7 @@ from dags.retrain_model_tasks.log_metrics import task_log_metrics
 with DAG(
     dag_id='retrain_model',
         start_date=days_ago(1),
-        schedule_interval=None,  # TODO: - check this
-        #params={"path": "first_param"}
+        schedule_interval=None
 ) as dag:
 
     input_validation = PythonOperator(
