@@ -9,6 +9,7 @@ a. How to run the entire flow
 ```bash
     cd beehero-ml-pipeline/pipeline
     docker compose up -d
+    mkdir -p tests/sensor_features tests/ready_data_for_clustering tests/predictions
 ```
 - This will make docker take care of all the necessary instalations to run airflow locally and simulate our pipeline
 - Once it's done, I recommend running the following just to make sure airflow loads our DAGs:
