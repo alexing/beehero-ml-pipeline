@@ -1,7 +1,7 @@
 from datetime import datetime
 import pandas as pd
 
-log_dir = 'tests/logs/log_db.txt'
+log_dir = 'tests/logs/results_db.txt'
 
 
 def log(row: str) -> None:

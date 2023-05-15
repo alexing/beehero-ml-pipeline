@@ -1,5 +1,6 @@
 import pandas as pd
 import dill
+import sklearn
 
 feature_creator_model_file = 'pipeline/models/feature_creator/2023-05-14T08:00:00.pkl'
 clustering_model_file = 'pipeline/models/clustering/2023-05-15T08:00:00.pkl'
@@ -25,3 +26,13 @@ clustering_model.train(train_features_df)
 predictions = clustering_model.inference(test_features_df)
 
 print(predictions)
+
+
+# metrics
+silhouette_score = sklearn.metrics.silhouette_score(test_features_df[['daily_mean', 'daily_std']], predictions)
+print(f"silhouette_score: {silhouette_score}")
+calinski_harabasz_score = sklearn.metrics.calinski_harabasz_score(test_features_df[['daily_mean', 'daily_std']], predictions)
+print(f"calinski_harabasz_score: {calinski_harabasz_score}")
+davies_bouldin_score = sklearn.metrics.davies_bouldin_score(test_features_df[['daily_mean', 'daily_std']], predictions)
+print(f"davies_bouldin_score: {davies_bouldin_score}")
+

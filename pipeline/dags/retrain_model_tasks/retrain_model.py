@@ -3,10 +3,10 @@ from typing import TypeVar
 import glob
 import dill
 import pandas as pd
+import sklearn
 
 # magic to make the pandas inside the dill work
 import __main__
-
 __main__.pd = pd
 
 SensorCluster = TypeVar("SensorCluster")  # of course we'll have the correct definition
@@ -28,9 +28,23 @@ def store_model(clustering_model: SensorCluster) -> None:
         dill.dump(clustering_model, f)
 
 
+def push_metrics(clustering_model: SensorCluster, train_df: pd.DataFrame, **context):
+    predictions = clustering_model.inference(train_df)
+    X = train_df[['daily_mean', 'daily_std']]
+    metrics = {
+        'silhouette_score': sklearn.metrics.silhouette_score(X, predictions),
+        'calinski_harabasz_score': sklearn.metrics.calinski_harabasz_score(X, predictions),
+        'davies_bouldin_score': sklearn.metrics.davies_bouldin_score(X, predictions)
+    }
+    context['task_instance'].xcom_push(key='metrics', value=metrics)
+
+
 def task_retrain_model(**context):
     path_to_df = context['task_instance'].xcom_pull(task_ids='parse_input_data')
     clustering_df = pd.read_csv(path_to_df)
     clustering_model = get_latest_clustering_model()
     clustering_model.train(clustering_df)
+
+    push_metrics(clustering_model, clustering_df, **context)
+
     store_model(clustering_model)

@@ -9,6 +9,7 @@ airflow = AirflowAPIService()
 now = datetime.today().strftime('%Y-%m-%dT%H:%M:%S')
 FEATURE_CREATION_DAG_ID = 'feature_creation'
 CLUSTERING_INFERENCE_DAG_ID = 'clustering_inference'
+RETRAIN_MODEL_DAG_ID = 'retrain_model'
 
 
 def activate_dags():
@@ -55,8 +56,14 @@ def launch_clustering_dag():
     # trigger clustering
     dag_run_id = f"clustering_{now}"
     print(f'triggering {dag_run_id}')
-    dag_run = airflow.trigger_dag_run(CLUSTERING_INFERENCE_DAG_ID, dag_run_id,
+    airflow.trigger_dag_run(CLUSTERING_INFERENCE_DAG_ID, dag_run_id,
                                       conf={"features_dir": "tests/sensor_features/"})
+
+
+def launch_train_dag():
+    dag_run_id = f"training_{now}"
+    print(f'triggering {dag_run_id}')
+    airflow.trigger_dag_run(RETRAIN_MODEL_DAG_ID, dag_run_id)
 
 
 def main():
@@ -64,6 +71,9 @@ def main():
     feature_creation_dags = launch_feature_creation_dags()
     wait_for_feature_creation_dags_completion(feature_creation_dags)
     launch_clustering_dag()
+
+    # TODO: decide when launching a retrain
+    launch_train_dag()
 
 
 if __name__ == "__main__":
