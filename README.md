@@ -16,7 +16,10 @@ a. How to run the entire flow
 ```bash
     docker exec -it --user airflow pipeline-scheduler bash -c "airflow dags list"
 ```
-- You can access the airflow UI through `http://localhost:8080` to see al flows running.
+- You can access the airflow UI through `http://localhost:8080` to see al flows running. <br/>
+Credentials are
+  - user: `airflow`
+  - pass: `airflow`
 - To simulate a simple pipeline you should run the file `integration_test.py`
 
 b. How to access outputs and logs
