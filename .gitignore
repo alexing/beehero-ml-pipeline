@@ -163,4 +163,4 @@ cython_debug/
 pipeline/tests/sensor_features/*.csv
 pipeline/tests/ready_data_for_clustering/*.csv
 pipeline/tests/predictions/*.csv
-pipeline/tests/logs/log_db.txt
+pipeline/tests/logs/*
