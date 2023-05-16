@@ -1,8 +1,7 @@
 # beehero-ml-pipeline
 
 
-# Main task:
-a. How to run the entire flow
+### How to run the entire flow
 
  - Clone the repository
  - Run the following
@@ -22,18 +21,18 @@ Credentials are
   - pass: `airflow`
 - To simulate a simple pipeline you should run the file `integration_test.py`
 
-b. How to access outputs and logs
+### How to access outputs and logs
 
 - Folder `pipeline/tests/sensor_timeseries` contains already different timeseries divided by `sensor_id`
 (these were extracted from the train_df that was given with the task).
 - As soon as the test is ran, the directory `pipeline/tests/sensor_features` will contain the output of the feature engineering model per sensor.
 - In `pipeline/tests/ready_data_for_clustering` will contain the aggregation of all of this data, ready to feed to the clustering algorithm
 - `pipeline/tests/predictions` will contain the output of said model.
-- `pipeline/tests/logs` contain two files. `results_db.txt` is a text file that simulates a db for storing the results of the clustering algorithm.
+- `pipeline/tests/logs` contains two files. `results_db.txt` is a text file that simulates a db for storing the results of the clustering algorithm.
 `metrics_db.txt` does the same but for storing the metrics of retraining the clustering algorithm and inferring new clusters.
 - Directory `pipeline/models` contains different versions of the clustering and feature models. The pipeline always takes the latest one.
 A new clustering model results from running the retrain_model pipeline (this is triggered at the end of the tests).
-
+- Directories `pipeline/logs` and `pipeline/plugins` are Airflow-internal and not related to the task.
 
 # Design
 The whole pipeline is modeled around [Apache Airflow](https://airflow.apache.org/docs/apache-airflow/stable/howto/index.html) orchestration tool. A local version is packed inside of a Docker compose. 
@@ -41,9 +40,9 @@ Everything was coded using Python 3.9. To interact with the airflow webservice t
 <br/>
 <br/>
 Although the implementation might be a bit simple, the main advantage of this design is that its **highly scalable** and components can be changed or further-developed easily respecting CI/CD principles.
-The skeleton is provided, basically. If, for example, we want to start using S3 instead of text files in a directory, then its just a matter of developing the wrapper and and changing a couple of lines in the relevant task.
+The skeleton is provided, basically. If, for example, we want to start using S3 instead of text files in a directory, then its just a matter of developing the wrapper and changing a couple of lines in the relevant task.
 
-The code for each of the tasks in the pipelines are divided into tasks and are found inside of `pipeline/dags`
+The code for each of the tasks in the pipelines is divided into tasks and is found inside of `pipeline/dags`
 
 The design centers around 3 main [DAGs](https://airflow.apache.org/docs/apache-airflow/stable/howto/index.html): 
 - **feature_creation**: responsible for loading a specific sensor's timeseries and transforming it into features by using the feature transformation model. Several instances of this DAG will be ran, one per sensor.
@@ -102,6 +101,7 @@ The current criteria is using the latest data to retrain. It outputs the relevan
       - Memory consumption of the model
       - Lag in delivering predictions
       - Error rate
+    - Health test for every service involved
 
 # Notes
 
@@ -110,17 +110,17 @@ Given more time I would've definitely added triggers instead of working with cro
 If we already know the bucket address to where a timeseries will be uploaded, we can have an observer trigger pointing there. This way we could start a feature creation pipeline as soon as the data is available.
 Same thing when all sensors are done for the day. As soon as all `feature_creation` pipelines have finished, only then we should start the clustering pipeline.<br/> <br/>
 Instead of using a directory and a text file (which is, of course, only ok in a POC) we could use [Amazon S3](https://aws.amazon.com/pm/serv-s3/). Another good solution for this would be [HDFS (Hadoop Distributed File System)](https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html).<br/>
-For this we should properly define the paths where we were to store the files: they should include noth the date and the sensor id.<br/>
+For this we should properly define the paths where we were to store the files: they should include both the date and the sensor id.<br/>
 Both of these systems could be used too as a **model repository**. <br/>
 
 This would be a great improvement too. By using a model repository we could run a pipeline with any model version we want, not just the latest one.
-A specific version of a model could be a parameter in launching any of these DAGs. We would have to define a retention rule for which how back we want to store models so as not to fill up our space quota to easily (storage is cheap in these systems but production model weights could go up to several GBs)
+A specific version of a model could be a parameter in launching any of these DAGs. We would have to define a retention rule for how far back we want to store models so as not to fill up our space quota too easily (storage is cheap in these systems but production model weights could go up to several GBs)
 
 Predictions could be store in a proper database and not in a textfile. [Redshift](https://aws.amazon.com/redshift/) could be a good solution, if cost is no issue. 
-If not AWS offers a cheaper option: [RDS](https://aws.amazon.com/rds/). Redshift is superior in several aspects: data storage limit, scalability, availability of data formats and support of serverless.
+Otherwise AWS offers a cheaper option: [RDS](https://aws.amazon.com/rds/). Redshift is superior in several aspects: data storage limit, scalability, availability of data formats and support of serverless.
 Google Cloud Platform offers another product similar to Redshift: [BigQuery](https://cloud.google.com/bigquery)
 
-I would use [Prometheus](https://prometheus.io/) which is a great monitoring solution for storing metrics. 
+I would use [Prometheus](https://prometheus.io/), which is a great monitoring solution for storing metrics. 
 Prometheus works amazingly with [Grafana](https://grafana.com/) for dashboard crafting.
 
 A huge part was left without discussing: the business decision of **when to retrain models**. <br/>
@@ -132,6 +132,9 @@ A learning service would be developed so that as new data becomes available, it 
 Every new model would be uploaded to our previously mentioned model repository. If we have different models, each one of them could have their own service instance running in a dedicated [Kubernetes](https://kubernetes.io/) pod.
 Communication with the service would happen via a REST API, e.g. training or predicting.
 
+This learning service for models is also a good way to scale if several models eventually become available. When a predicting pipeline is triggered, the user will have to declare which is the model they want to use.
+
+
 Also, a process to clean up data and old models should be designed but this is beyond the scope of this task.
 
 If suddenly long processing times start becoming an issue, a solution we could implement would be to have more than one instance of the clustering pipeline.
@@ -139,9 +142,12 @@ Let's say we have 100 sensors triggering 100 `feature_creation` pipelines. These
 Instead of having only 1 instance of `clustering_inference`, we could have multiple. For the purposes of illustrating, let's imagine 5 instances. <br/>
 
 As soon as 20 (100 `feature_creation` / 5 `clustering_inference`) DAGs are done, we would launch the first `clustering_inference` pipeline using the data from those first 20 `feature_creation` ones. <br/>
-Then the second batch of 20 is done, and we have 40 `feature_creation` pipelines finished. We then launch the second `clustering_inference` process with those 40.
+Then the second batch of 20 is done, and we'll have 40 `feature_creation` pipelines finished. We then launch the second `clustering_inference` process with those 40.
 
 The third process is launched with 60, the fourth with 80 and the fifth with 100. As soon as each of these is finished, results will be reported.
-This way we would get partial results faster. Although we wouldn't get the complete idea until the end, this may prove enough until everything is eventually processed.
+This way we would get results faster, albeit partial. Although we wouldn't get the complete idea until the end, this may prove enough until everything is eventually processed.
 This solution is also highly customizable.
+
+
+**Thanks!** I'm available for any question, follow up or doubt you might have regarding the installation or the design.
 
